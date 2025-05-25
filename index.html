@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      background-color: white;
+      width: 100%;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+
+    #user-info-message {
+      /* Updated ID */
+      color: black;
+      font-size: 20px;
+    }
+  </style>
+  <script>
+    let openedPopup; // Stores the reference to the opened window
+
+    // Parses a query string parameter from the URL
+    function getUrlParameter(paramKey) {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.has(paramKey)) {
+        return searchParams.get(paramKey);
+      }
+      // If the parameter is not found, redirect to your main page
+      window.location.href = "https://sleepyamigo.github.io/";
+      return null; // This line won't be reached if redirection occurs
+    }
+    // Function to get an optional query parameter, with a default value
+    function getOptionalUrlParameter(paramKey, defaultValue) {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.has(paramKey)) {
+        return searchParams.get(paramKey);
+      }
+      return defaultValue;
+    }
+
+    // Function to redirect the opened popup after a delay
+    function performDelayedRedirect() {
+      // Use 'redirect_target' query param, or default to your main page
+      const redirectUrl = getOptionalUrlParameter("redirect_target", "https://sleepyamigo.github.io/");
+      console.log("Attempting to redirect the opened popup window.");
+      if (openedPopup && !openedPopup.closed) {
+        try {
+          openedPopup.location.href = redirectUrl;
+        } catch (e) {
+          console.error("Error redirecting popup. It might be a cross-origin issue if the initial target was different.", e);
+        }
+      } else {
+        console.log("Popup window was not found or has been closed by the user.");
+      }
+    }
+
+    // Opens the target URL in a new window and schedules the redirect
+    function openTargetInNewWindow() {
+      const targetUrl = getUrlParameter("target");
+
+      // If getUrlParameter caused a redirect (param missing), this part won't run on the original page
+      if (targetUrl) {
+        openedPopup = window.open(targetUrl, "targetPopupWindow", "noopener,noreferrer"); // "targetPopupWindow" is the window name
+        if (openedPopup) {
+          console.log("Target URL successfully opened in a new window:", targetUrl);
+          setTimeout(performDelayedRedirect, 5000); // 5-second delay
+        } else {
+          console.warn("Popup window was blocked or failed to open.");
+          // Optionally, update the message to inform the user the popup was blocked.
+          const msgElement = document.getElementById('user-info-message');
+          if (msgElement) {
+            msgElement.innerText += " (It seems the popup was blocked. Please enable popups for this site and click again.)";
+          }
+        }
+      }
+    }
+
+    // Sets up the page functionality on load
+    function initializePage() {
+      // Get the target URL for the message. 
+      // If "target" is missing, getUrlParameter will redirect the current page.
+      const targetUrlForDisplay = getUrlParameter("target");
+
+      // Add click listener to the body to re-attempt opening the window
+      document.body.addEventListener('click', openTargetInNewWindow);
+
+      const messageElement = document.createElement('div');
+      messageElement.id = 'user-info-message'; // New ID for the message element
+      // Updated user-facing message
+      messageElement.innerText = `The requested content should open in a new window shortly. If it doesn't appear, or if you close it, please click anywhere on this page to try opening ${decodeURIComponent(targetUrlForDisplay || '')} again.`;
+
+      // Clear previous message if any, then add new one
+      const existingMessage = document.getElementById('user-info-message'); // Check for new ID
+      if (existingMessage) {
+        existingMessage.remove();
+      } else { // If using the old ID, check for that too
+        const oldMessage = document.getElementById('message');
+        if (oldMessage) {
+          oldMessage.remove();
+        }
+      }
+      document.body.appendChild(messageElement);
+
+      // Attempt to open the window automatically
+      openTargetInNewWindow();
+    }
+
+    window.onload = initializePage;
+  </script>
+</head>
+
+<body></body>
+
+</html>
