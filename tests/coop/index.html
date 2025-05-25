@@ -48,9 +48,12 @@
       if (searchParams.has(paramName)) {
         return searchParams.get(paramName);
       }
-      // Redirect if the required parameter is missing
-      window.location.href = "https://sleepyamigo.github.io/coop";
-      return null; // Should not be reached due to redirection
+      // show info about missing parameter
+      const messageElement = document.createElement('div');
+      messageElement.id = 'user-info-message';
+      messageElement.innerText = `Missing required query parameter: ${paramName}`;
+      document.body.appendChild(messageElement);
+
     }
 
     // Function to redirect the opened popup window after a set delay.
@@ -58,7 +61,7 @@
       console.log("Redirecting the opened popup to a new location.");
       if (popupWindowRef && !popupWindowRef.closed) {
         try {
-          popupWindowRef.location.href = "https://sleepyamigo.github.io/coop/redirected.html";
+          popupWindowRef.location.href = "https://sleepyamigo.github.io/tests/coop/redirected.html";
         } catch (e) {
           console.error("Error during popup redirection (possibly cross-origin):", e);
         }
