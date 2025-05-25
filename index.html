@@ -37,18 +37,15 @@
     }
   </style>
   <script>
-    let openedPopup; // Stores the reference to the opened window
-
-    // Parses a query string parameter from the URL
-    function getUrlParameter(paramKey) {
-      const searchParams = new URLSearchParams(window.location.search);
-      if (searchParams.has(paramKey)) {
-        return searchParams.get(paramKey);
+    // --- Custom URL parameter fetcher ---
+    function getRequiredParam(param) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has(param)) {
+        return params.get(param);
       }
-      // If the parameter is not found, redirect to your main page
       window.location.href = "https://sleepyamigo.github.io/";
-      return null; // This line won't be reached if redirection occurs
     }
+
     // Function to get an optional query parameter, with a default value
     function getOptionalUrlParameter(paramKey, defaultValue) {
       const searchParams = new URLSearchParams(window.location.search);
@@ -58,77 +55,49 @@
       return defaultValue;
     }
 
-    // Function to redirect the opened popup after a delay
-    function performDelayedRedirect() {
-      // Use 'redirect_target' query param, or default to your main page
-      const redirectUrl = getOptionalUrlParameter("redirect_target", "https://sleepyamigo.github.io/");
-      console.log("[Popup] Scheduled redirect to:", redirectUrl);
-      if (openedPopup && !openedPopup.closed) {
+    // --- Delayed redirect for popup ---
+    function delayedPopupRedirect() {
+      console.log("[Popup] Performing delayed redirect");
+      const redirectTarget = getOptionalUrlParameter("redirect_target", "https://sleepyamigo.github.io/");
+      if (popupRef && !popupRef.closed) {
         try {
-          console.log("[Popup] Attempting to set location to:", redirectUrl);
-          openedPopup.location = redirectUrl;
-          console.log("[Popup] Redirect command issued.");
+          popupRef.location = redirectTarget;
+          console.log("[Popup] Redirected to:", redirectTarget);
         } catch (e) {
-          console.error("[Popup] Error redirecting popup. It might be a cross-origin issue if the initial target was different.", e);
+          console.error("[Popup] Cross-origin redirect failed:", e);
         }
       } else {
-        console.log("[Popup] Popup window was not found or has been closed by the user.");
+        console.warn("[Popup] Popup window not available for redirect.");
       }
     }
 
-    // Opens the target URL in a new window and schedules the redirect
-    function openTargetInNewWindow() {
-      const targetUrl = getUrlParameter("target");
-      console.log("[Main] openTargetInNewWindow called. targetUrl:", targetUrl);
-      // If getUrlParameter caused a redirect (param missing), this part won't run on the original page
-      if (targetUrl) {
-        openedPopup = window.open(targetUrl, "targetPopupWindow", "noopener,noreferrer"); // "targetPopupWindow" is the window name
-        if (openedPopup) {
-          console.log("[Main] Target URL successfully opened in a new window:", targetUrl);
-          setTimeout(performDelayedRedirect, 5000); // 5-second delay
-        } else {
-          console.warn("[Main] Popup window was blocked or failed to open.");
-          // Optionally, update the message to inform the user the popup was blocked.
-          const msgElement = document.getElementById('user-info-message');
-          if (msgElement) {
-            msgElement.innerText += " (It seems the popup was blocked. Please enable popups for this site and click again.)";
-          }
-        }
+    // --- Open popup and schedule redirect ---
+    let popupRef;
+    function openAndSchedulePopup() {
+      const targetUrl = getRequiredParam("target");
+      popupRef = window.open(targetUrl, "popupWindow", "noopener,noreferrer");
+      if (popupRef) {
+        console.log("[Main] Popup opened:", targetUrl);
+        setTimeout(delayedPopupRedirect, 5000);
+      } else {
+        console.warn("[Main] Popup blocked or failed to open.");
+        const msg = document.getElementById('user-info-message');
+        if (msg) msg.innerText += " (Popup blocked. Enable popups and click again.)";
       }
     }
 
-    // Sets up the page functionality on load
-    function initializePage() {
-      console.log("[Main] initializePage called.");
-      // Get the target URL for the message. 
-      // If "target" is missing, getUrlParameter will redirect the current page.
-      const targetUrlForDisplay = getUrlParameter("target");
-      console.log("[Main] targetUrlForDisplay:", targetUrlForDisplay);
-      // Add click listener to the body to re-attempt opening the window
-      document.body.addEventListener('click', function () {
-        console.log("[Main] Body clicked. Attempting to open popup again.");
-        openTargetInNewWindow();
-      });
-      const messageElement = document.createElement('div');
-      messageElement.id = 'user-info-message'; // New ID for the message element
-      // Updated user-facing message
-      messageElement.innerText = `The requested content should open in a new window shortly. If it doesn't appear, or if you close it, please click anywhere on this page to try opening ${decodeURIComponent(targetUrlForDisplay || '')} again.`;
-      // Clear previous message if any, then add new one
-      const existingMessage = document.getElementById('user-info-message'); // Check for new ID
-      if (existingMessage) {
-        existingMessage.remove();
-      } else { // If using the old ID, check for that too
-        const oldMessage = document.getElementById('message');
-        if (oldMessage) {
-          oldMessage.remove();
-        }
-      }
-      document.body.appendChild(messageElement);
-      // Attempt to open the window automatically
-      openTargetInNewWindow();
+    // --- Page setup and user message ---
+    function initializePOCPage() {
+      const targetUrl = getRequiredParam("target");
+      document.body.addEventListener('click', openAndSchedulePopup);
+      const msg = document.createElement('div');
+      msg.id = 'user-info-message';
+      msg.innerText = `The requested content should open in a new window. If it doesn't, or you close it, click anywhere to try opening ${decodeURIComponent(targetUrl)} again.`;
+      document.body.appendChild(msg);
+      openAndSchedulePopup();
     }
 
-    window.onload = initializePage;
+    window.onload = initializePOCPage;
   </script>
 </head>
 
