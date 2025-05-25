@@ -1,106 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <style>
-    body {
-      background: linear-gradient(135deg, #e0eafc 0%, #f8fafc 100%);
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', 'Arial', sans-serif;
-      transition: background 0.5s;
-    }
-
-    #user-info-message {
-      color: #22223b;
-      background: #f2e9e4;
-      border-radius: 18px;
-      padding: 36px 48px;
-      box-shadow: 0 8px 32px rgba(34, 34, 59, 0.10);
-      font-size: 1.25rem;
-      max-width: 85vw;
-      margin: 0 auto;
-      letter-spacing: 0.01em;
-      line-height: 1.6;
-      border: none;
-      font-weight: 500;
-      transition: box-shadow 0.3s, background 0.3s;
-    }
-
-    #user-info-message:hover {
-      box-shadow: 0 12px 36px rgba(34, 34, 59, 0.15);
-      background: #e9ecef;
-    }
-  </style>
-  <script>
-    // --- Custom URL parameter fetcher ---
-    function getRequiredParam(param) {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has(param)) {
-        return params.get(param);
-      }
-      window.location.href = "https://sleepyamigo.github.io/";
-    }
-
-    // Function to get an optional query parameter, with a default value
-    function getOptionalUrlParameter(paramKey, defaultValue) {
-      const searchParams = new URLSearchParams(window.location.search);
-      if (searchParams.has(paramKey)) {
-        return searchParams.get(paramKey);
-      }
-      return defaultValue;
-    }
-
-    // --- Delayed redirect for popup ---
-    function delayedPopupRedirect() {
-      console.log("[Popup] Performing delayed redirect");
-      const redirectTarget = getOptionalUrlParameter("redirect_target", "https://sleepyamigo.github.io/");
-      if (popupRef && !popupRef.closed) {
-        try {
-          popupRef.location = redirectTarget;
-          console.log("[Popup] Redirected to:", redirectTarget);
-        } catch (e) {
-          console.error("[Popup] Cross-origin redirect failed:", e);
-        }
-      } else {
-        console.warn("[Popup] Popup window not available for redirect.");
-      }
-    }
-
-    // --- Open popup and schedule redirect ---
-    let popupRef;
-    function openAndSchedulePopup() {
-      const targetUrl = getRequiredParam("target");
-      popupRef = window.open(targetUrl, "popupWindow", "noopener,noreferrer");
-      if (popupRef) {
-        console.log("[Main] Popup opened:", targetUrl);
-        setTimeout(delayedPopupRedirect, 5000);
-      } else {
-        console.warn("[Main] Popup blocked or failed to open.");
-        const msg = document.getElementById('user-info-message');
-        if (msg) msg.innerText += " (Popup blocked. Enable popups and click again.)";
-      }
-    }
-
-    // --- Page setup and user message ---
-    function initializePOCPage() {
-      const targetUrl = getRequiredParam("target");
-      document.body.addEventListener('click', openAndSchedulePopup);
-      const msg = document.createElement('div');
-      msg.id = 'user-info-message';
-      msg.innerText = `The requested content should open in a new window. If it doesn't, or you close it, click anywhere to try opening ${decodeURIComponent(targetUrl)} again.`;
-      document.body.appendChild(msg);
-      openAndSchedulePopup();
-    }
-
-    window.onload = initializePOCPage;
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello</title>
 </head>
 
-<body></body>
+<body>
+  hello :)
+</body>
 
 </html>

